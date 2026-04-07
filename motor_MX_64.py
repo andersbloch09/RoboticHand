@@ -130,7 +130,8 @@ class MX_64:
         current = self.get_current()        
         if current is None:
             return None
-        return (current / 1000.0) * self.KT_NM_PER_A
+        # Convert from units to mA, then to A, then to Nm using the torque constant
+        return (current * self.CURRENT_UNIT / 1000.0) * self.KT_NM_PER_A
 
 
 
