@@ -1,6 +1,6 @@
 
 from dynamixel_sdk import PortHandler, PacketHandler
-
+import json
 
 class MX_64:
     def __init__(self, dxl_id, dxl_io, json_file, protocol=1, control_table_protocol=None):
@@ -29,6 +29,9 @@ class MX_64:
         self.min_position = config.get("Values").get("Min_Position")
         self.max_position = config.get("Values").get("Max_Position")
         self.max_angle = config.get("Values").get("Max_Angle")
+        self.CURRENT_UNIT = 3.361  # mA per unit (6521.76 mA / 1941 from MX-64 datasheet)
+        self.KT_NM_PER_A = 1.463
+        self.TICKS_PER_REV = 4096
 
     def write_control_table(self, data_name, value):
         """Writes a value to a control table area of a specific name"""
@@ -92,6 +95,44 @@ class MX_64:
             self.write_control_table("Operating_Mode", 4)
             if goal_current is not None:
                 self.write_control_table("Goal_Current", goal_current)
+    
+    def set_current_based_position_mode(self, goal_current=None):
+        """Sets the motor to run in current-based position mode"""
+        if self.CONTROL_TABLE_PROTOCOL == 2:
+            self.write_control_table("Operating_Mode", 5)
+            if goal_current is not None:
+                self.write_control_table("Goal_Current", goal_current)
+
+    def set_torque_limit(self, torque_nm):
+        """Sets the current limit for current-control mode (bidirectional)"""
+        # MX-64 range: -2047 to 2047 (each unit ≈ 3.36 mA)
+        current_mA = torque_nm / self.KT_NM_PER_A * 1000.0  # Convert nm to mA
+        limit_units = int(current_mA / self.CURRENT_UNIT)
+        # Clamp to valid range
+        limit_units = max(-2047, min(2047, limit_units))
+        if self.CONTROL_TABLE_PROTOCOL == 1:
+            # protocol 1 calls torque limit Max Torque and only has a unidirectional current limit.
+            if torque_nm < 0:
+                print("[WARNING]: Protocol 1 does not support negative torque limits. Setting to 0.")
+                torque_nm = 0
+            self.write_control_table("Max_Torque", limit_units)
+        elif self.CONTROL_TABLE_PROTOCOL == 2:
+            # protocol 2 has a specific register for bidirectional current limit.
+            self.write_control_table("Current_Limit", limit_units)
+
+    def move_to(self, turns):
+        """Sets the goal position of the motor"""
+        ticks = int(turns * self.TICKS_PER_REV)
+        self.write_control_table("Goal_Position", ticks)
+
+    def get_torque(self):
+        """Returns the current motor torque in Nm"""
+        current = self.get_current()        
+        if current is None:
+            return None
+        return (current / 1000.0) * self.KT_NM_PER_A
+
+
 
     def set_velocity(self, velocity):
         """Sets the goal velocity of the motor"""
