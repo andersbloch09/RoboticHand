@@ -66,6 +66,11 @@ class MX_64:
             if min_limit is None or max_limit is None:
                 min_limit = self.min_position
                 max_limit = self.max_position
+            # Convert signed to unsigned if needed
+            if min_limit < 0:
+                min_limit = min_limit + 0x100000000
+            if max_limit < 0:
+                max_limit = max_limit + 0x100000000
             self.write_control_table("CW_Angle_Limit", min_limit)
             self.write_control_table("CCW_Angle_Limit", max_limit)
             if goal_current is not None:
@@ -75,8 +80,14 @@ class MX_64:
             # protocol 2 has a specific register for operating mode.
             self.write_control_table("Operating_Mode", 3)
             if min_limit is not None:
+                # Convert signed to unsigned if needed
+                if min_limit < 0:
+                    min_limit = min_limit + 0x100000000
                 self.write_control_table("Min_Position_Limit", min_limit)
             if max_limit is not None:
+                # Convert signed to unsigned if needed
+                if max_limit < 0:
+                    max_limit = max_limit + 0x100000000
                 self.write_control_table("Max_Position_Limit", max_limit)
             if goal_current is not None:
                 self.write_control_table("Goal_Current", goal_current)
@@ -157,7 +168,10 @@ class MX_64:
             self.write_control_table("Profile_Acceleration", acceleration)
 
     def set_position(self, position):
-        """Sets the goal position of the motor"""
+        """Sets the goal position of the motor, converting signed to unsigned if needed"""
+        # Convert signed 32-bit to unsigned if negative
+        if position < 0:
+            position = position + 0x100000000  # 4294967296
         self.write_control_table("Goal_Position", position)
 
     def set_angle(self, angle):
@@ -168,7 +182,11 @@ class MX_64:
 
     def get_position(self):
         """Returns the motor position"""
-        return self.read_control_table("Present_Position")
+        raw_pos = self.read_control_table("Present_Position")
+        # Convert 32-bit unsigned to signed if > 2^31
+        if raw_pos > 0x7FFFFFFF:  # 2147483648
+            raw_pos -= 0x100000000  # 4294967296
+        return raw_pos
 
     def get_angle(self):
         """Returns the motor position as an angle in degrees"""
@@ -187,7 +205,11 @@ class MX_64:
                 current *= -1
             return current
         elif self.CONTROL_TABLE_PROTOCOL == 2:
-            return self.read_control_table("Present_Current")
+            current = self.read_control_table("Present_Current")
+            # Convert 16-bit unsigned to signed if > 32767 (2^15 - 1)
+            if current > 0x7FFF:  # 32767
+                current -= 0x10000  # 65536
+            return current
 
     def torque_enable(self):
         """Enables motor torque"""
