@@ -1,0 +1,32 @@
+{
+  "finger_0": {
+    "start": 2495,
+    "min": 4885,
+    "max": 2494
+  },
+  "finger_1": {
+    "start": 1390,
+    "min": 2560,
+    "max": 1390
+  },
+  "finger_2": {
+    "start": 341,
+    "min": 2695,
+    "max": 341
+  },
+  "finger_3": {
+    "start": 2025,
+    "min": 4142,
+    "max": 2025
+  },
+  "thumb_flexion": {
+    "start": 2008,
+    "min": 3401,
+    "max": 2007
+  },
+  "thumb_abduction": {
+    "start": 1563,
+    "min": 1646,
+    "max": 1563
+  }
+}

@@ -158,6 +158,8 @@ class MX_64:
             if self.read_control_table("Operating_Mode") == 1:
                 self.write_control_table("Goal_Velocity", velocity)
             else:
+                velocity = int(velocity/0.229)  # Convert RPM to velocity units
+                velocity = max(0, min(285, velocity))  # Clamp to motor's actual range
                 self.write_control_table("Profile_Velocity", velocity)
 
     def set_acceleration(self, acceleration):
@@ -169,6 +171,8 @@ class MX_64:
 
     def set_position(self, position):
         """Sets the goal position of the motor, converting signed to unsigned if needed"""
+        # Convert to integer
+        position = int(position)
         # Convert signed 32-bit to unsigned if negative
         if position < 0:
             position = position + 0x100000000  # 4294967296

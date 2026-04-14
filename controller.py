@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 from pathlib import Path
 from motor_MX_64 import MX_64 as Motor
@@ -14,7 +15,7 @@ class Controller:
     port_Handler: PortHandler = None
     packet_Handler: PacketHandler = None
     # Motor control settings
-    motors:dict[int,Motor] = {}
+    motors: dict[int, Motor] = {}
 
     def __init__(self, n_motors: int, port = PORT_USB, baud_rate = BAUD_RATE) -> None:
         self.n_motors = n_motors
@@ -46,7 +47,10 @@ class Controller:
     
     # Motor discovery and initialization
     def find_motors(self) -> bool:
-        while len(self.motors) < self.n_motors:
+        max_retries = 3
+        retry_count = 0
+        
+        while len(self.motors) < self.n_motors and retry_count < max_retries:
             dxl_data_list, _ = self.packet_Handler.broadcastPing(self.port_Handler)
             # Get the path to the JSON config file relative to this file
             json_path = str(Path(__file__).parent / "DynamixelJSON/MX64.json")
@@ -56,9 +60,21 @@ class Controller:
 
             if self.motors:
                 print(f"[INFO]: Found motor IDs {list(self.motors.keys())}.")
+                if len(self.motors) == self.n_motors:
+                    return True
+                else:
+                    print(f"[WARNING]: Found {len(self.motors)} motors, expected {self.n_motors}. Retrying...")
+                    retry_count += 1
             else:
                 print("[WARNING]: No motors found. Retrying...")
-        return True
+                retry_count += 1
+        
+        # If we found some motors, continue anyway
+        if self.motors:
+            print(f"[INFO]: Using {len(self.motors)} motors")
+            return True
+        
+        return False
     
     def __check_error(self, protocol, dxl_comm_result, dxl_error):
         """Prints the error message when not successful"""
