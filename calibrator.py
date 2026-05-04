@@ -73,6 +73,13 @@ class Calibrator:
         )
         print()
 
+        # Calibrate index abduction
+        print("Calibrating index_abduction...")
+        self.calibration_data["index_abduction"] = self._calibrate_digit(
+            self.hand.index_abduction, "index_abduction"
+        )
+        print()
+
         print("=== CALIBRATION COMPLETE ===\n")
 
     def _calibrate_digit(self, digit, digit_name):
@@ -207,5 +214,9 @@ class Calibrator:
         if "thumb_abduction" in self.calibration_data:
             cal = self.calibration_data["thumb_abduction"]
             self.hand.thumb.abduction.set_calibration(cal["start"], cal["min"], cal["max"])
+        
+        if "index_abduction" in self.calibration_data:
+            cal = self.calibration_data["index_abduction"]
+            self.hand.index_abduction.set_calibration(cal["start"], cal["min"], cal["max"])
 
         print("Calibration applied to all digits.\n")

@@ -19,12 +19,12 @@ class MotorConfig:
     # Customize to match your hardware setup
     DEFAULT_CONFIG = {
         "finger_0_flexion": 4,      # Index finger flexion
-        "finger_1_flexion": 3,      # Middle finger flexion
-        "finger_2_flexion": 0,      # Ring finger flexion
-        "finger_3_flexion": 5,      # Pinky finger flexion
+        "finger_1_flexion": 0,      # Middle finger flexion
+        "finger_2_flexion": 5,      # Ring finger flexion
+        "finger_3_flexion": 2,      # Pinky finger flexion
         "thumb_flexion": 1,         # Thumb flexion
         "thumb_abduction": 6,       # Thumb abduction (left/right)
-        #"index_abduction": 2,       # Index finger abduction (optional)
+        "index_abduction": 3,       # Index finger abduction (optional)
     }
     
     def __init__(self, config=None):

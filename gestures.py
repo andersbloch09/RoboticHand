@@ -65,6 +65,7 @@ class Gestures:
             "finger_3": 1.0,        # Pinky: close tight
             "thumb_flexion": 0.3,   # Thumb: slightly flexed
             "thumb_abduction": 0.5, # Thumb: partially abducted
+            "index_abduction": 0.0,  # Index: partially abducted (spread from middle)
         })
         
         grasp = Grasp("peace_sign", synergy, {
@@ -74,10 +75,45 @@ class Gestures:
             "finger_3": 0.2,
             "thumb_flexion": 0.2,
             "thumb_abduction": 0.2,
+            "index_abduction": 0.2,
         })
         
         return grasp
     
+    @staticmethod
+    def the_bird():
+        """
+        The Bird gesture.
+        
+        - Thumb: Relaxed aside
+        - Index: Extended upward
+        - Middle: Relaxed
+        - Ring + Pinky: Extended upward
+        - Force: Light (extended fingers)
+        """
+        synergy = Synergy("the_bird", {
+            "finger_0": 1.0,        # Index: extended
+            "finger_1": 0.0,        # Middle: closed
+            "finger_2": 1.0,        # Ring: extended
+            "finger_3": 1.0,        # Pinky: extended
+            "thumb_flexion": 0.2,   # Thumb: slightly flexed
+            "thumb_abduction": 1.0, # Thumb: spread
+            "index_abduction": 1.0,  # Index: abducted
+        })
+        
+        grasp = Grasp("the_bird", synergy, {
+            "finger_0": 0.2,        # Full contraction threshold
+            "finger_1": 0.2,        # Full contraction threshold
+            "finger_2": 0.2,        # Full contraction threshold
+            "finger_3": 0.2,        # Full contraction threshold
+            "thumb_flexion": 0.2,
+            "thumb_abduction": 0.2,
+            "index_abduction": 0.2,
+        })
+        
+        return grasp
+
+
     @staticmethod
     def rock_sign():
         """
@@ -96,6 +132,7 @@ class Gestures:
             "finger_3": 0.0,        # Pinky: extended
             "thumb_flexion": 0.2,   # Thumb: slightly flexed
             "thumb_abduction": 0.8, # Thumb: spread
+            "index_abduction": 0.0,  # Index: partially abducted (spread from middle)
         })
         
         grasp = Grasp("rock_sign", synergy, {
@@ -105,6 +142,7 @@ class Gestures:
             "finger_3": 0.2,        # Full contraction threshold
             "thumb_flexion": 0.2,
             "thumb_abduction": 0.2,
+            "index_abduction": 0.2,
         })
         
         return grasp
@@ -120,12 +158,13 @@ class Gestures:
         - Force: Very light (extended fingers)
         """
         synergy = Synergy("ok_sign", {
-            "finger_0": 1.0,        # Index: closed (touches thumb)
+            "finger_0": 1.5,        # Index: closed (touches thumb)
             "finger_1": 0.0,        # Middle: extended
             "finger_2": 0.0,        # Ring: extended
             "finger_3": 0.0,        # Pinky: extended
-            "thumb_flexion": 1.0,   # Thumb: fully flexed
-            "thumb_abduction": 0.0, # Thumb: not abducted
+            "thumb_flexion": 0.6,   # Thumb: fully flexed
+            "thumb_abduction": 0.8, # Thumb: not abducted
+            "index_abduction": 1.0,  # Index: not abducted (touching thumb)
         })
         
         grasp = Grasp("ok_sign", synergy, {
@@ -133,12 +172,45 @@ class Gestures:
             "finger_1": 0.2,        # Full contraction threshold
             "finger_2": 0.2,        # Full contraction threshold
             "finger_3": 0.2,        # Full contraction threshold
-            "thumb_flexion": 0.2,
-            "thumb_abduction": 0.2,
+            "thumb_flexion": 0.20,
+            "thumb_abduction": 0.20,
+            "index_abduction": 0.20,
         })
         
         return grasp
-    
+
+    @staticmethod
+    def index_abductor_sign():
+        """
+        Index abductor sign gesture.
+        
+        - Thumb: Flexed inward
+        - Index: Flexed inward (touching thumb)
+        - Middle + Ring + Pinky: Extended upward
+        - Force: Very light (extended fingers)
+        """
+        synergy = Synergy("index_abductor_sign", {
+            "finger_0": 0.0,        # Index: closed (touches thumb)
+            "finger_1": 0.0,        # Middle: extended
+            "finger_2": 0.0,        # Ring: extended
+            "finger_3": 0.0,        # Pinky: extended
+            "thumb_flexion": 0.0,   # Thumb: fully flexed
+            "thumb_abduction": 0.0, # Thumb: not abducted
+            "index_abduction": -0.5,  # Index: not abducted (touching thumb)
+        })
+        
+        grasp = Grasp("index_abductor_sign", synergy, {
+            "finger_0": 0.2,        # Full contraction threshold
+            "finger_1": 0.2,        # Full contraction threshold
+            "finger_2": 0.2,        # Full contraction threshold
+            "finger_3": 0.2,        # Full contraction threshold
+            "thumb_flexion": 0.10,
+            "thumb_abduction": 0.10,
+            "index_abduction": 0.20,
+        })
+        
+        return grasp
+        
     @staticmethod
     def open_hand():
         """
@@ -154,7 +226,8 @@ class Gestures:
             "finger_2": 0.0,        # Ring: extended
             "finger_3": 0.0,        # Pinky: extended
             "thumb_flexion": 0.0,   # Thumb: extended
-            "thumb_abduction": 1.0, # Thumb: fully abducted
+            "thumb_abduction": 0.0, # Thumb: fully abducted
+            "index_abduction": 0.0,  # Index: not abducted
         })
         
         grasp = Grasp("open_hand", synergy, {
@@ -164,6 +237,7 @@ class Gestures:
             "finger_3": 0.2,
             "thumb_flexion": 0.2,
             "thumb_abduction": 0.2,
+            "index_abduction": 0.2,
         })
         
         return grasp
@@ -184,6 +258,7 @@ class Gestures:
             "finger_3": 1.0,        # Pinky: close
             "thumb_flexion": 0.7,   # Thumb: mostly flexed
             "thumb_abduction": 0.2, # Thumb: slightly spread
+            "index_abduction": 1.0,  # Index: not abducted
         })
         
         grasp = Grasp("power_fist", synergy, {
@@ -193,6 +268,7 @@ class Gestures:
             "finger_3": 0.2,
             "thumb_flexion": 0.2,   # Full contraction threshold
             "thumb_abduction": 0.2,
+            "index_abduction": 0.2,
         })
         
         return grasp
@@ -264,8 +340,10 @@ class Gestures:
             "peace_sign": Gestures.peace_sign(),
             "rock_sign": Gestures.rock_sign(),
             "ok_sign": Gestures.ok_sign(),
+            "index_abductor_sign": Gestures.index_abductor_sign(),
             "open_hand": Gestures.open_hand(),
             "power_fist": Gestures.power_fist(),
             "point": Gestures.point(),
             "precision_grip": Gestures.precision_grip(),
+            "the_bird": Gestures.the_bird(),
         }
