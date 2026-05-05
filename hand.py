@@ -3,6 +3,7 @@ from thumb import Thumb
 from synergy import Synergy
 from motor_config import MotorConfig
 from calibrator import Calibrator
+from motion import MotionPlayer
 
 
 class Hand:
@@ -61,12 +62,24 @@ class Hand:
         
         # Current active grasp (if any)
         self.active_grasp = None
+        
+        # Motion player for complex coordinated movements
+        self.motion_player = MotionPlayer(self)
     
     def initialize_calibration(self):
         calibrator = Calibrator(self)
         calibrator.calibrate_if_needed()
     
     def update(self, dt):
+        """
+        Non-blocking update step for all hand components.
+        
+        Args:
+            dt: Time step (seconds)
+        """
+        # Update motion player (applies targeted motion keyframes to digits)
+        self.motion_player.update(dt)
+        
         # Update all fingers
         for finger in self.fingers.values():
             finger.update(dt)

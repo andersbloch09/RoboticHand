@@ -126,7 +126,7 @@ class Calibrator:
         print(f"    Setting up motor {motor.dxl_id} for {direction}...")
         motor.set_current_based_position_mode()
         motor.torque_disable()
-        motor.set_torque_limit(0.2)  # Standard torque limit for calibration
+        motor.set_torque_limit(0.3)  # Standard torque limit for calibration
         motor.torque_enable()
         print(f"    Motor {motor.dxl_id} initialized (position mode, torque enabled)")
         

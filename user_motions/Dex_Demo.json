@@ -1,0 +1,82 @@
+{
+  "name": "Dex_Demo",
+  "duration": 1.0,
+  "easing": "ease_in_out_cubic",
+  "repeat": 1,
+  "loop": true,
+  "description": "",
+  "keyframes": [
+    [
+      0.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 0.0,
+        "index_abduction": 0.8
+      }
+    ],
+    [
+      1.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 0.0,
+        "index_abduction": 0.0
+      }
+    ],
+    [
+      2.0,
+      {
+        "finger_0": 0.46,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.45,
+        "thumb_abduction": 0.7,
+        "index_abduction": 0.8
+      }
+    ],
+    [
+      3.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 0.5,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.5,
+        "thumb_abduction": 1.0,
+        "index_abduction": 0.8
+      }
+    ],
+    [
+      4.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.55,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.31,
+        "thumb_abduction": 1.0,
+        "index_abduction": 0.8
+      }
+    ],
+    [
+      1.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.45,
+        "thumb_flexion": 0.3,
+        "thumb_abduction": 1.0,
+        "index_abduction": 0.8
+      }
+    ]
+  ]
+}

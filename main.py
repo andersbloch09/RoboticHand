@@ -5,6 +5,7 @@ from controller import Controller
 from hand import Hand
 from motor_config import MotorConfig
 from gestures import Gestures
+from motion_editor_gui import launch_motion_editor
 
 
 class RoboticHandDemo:
@@ -252,6 +253,7 @@ def print_usage():
     print("  sequence              Run all gestures in sequence (default)")
     print("  interactive           Interactive gesture selection")
     print("  gesture <name>        Execute single gesture")
+    print("  motion_editor         Launch motion editor GUI")
     print("\nGesture names:")
     print("  thumbs_up, peace_sign, rock_sign, ok_sign, open_hand,")
     print("  power_fist, point, precision_grip")
@@ -260,6 +262,7 @@ def print_usage():
     print("  python main.py interactive                  # Interactive mode")
     print("  python main.py gesture thumbs_up            # Single gesture")
     print("  python main.py gesture peace_sign 10        # Gesture for 10s")
+    print("  python main.py motion_editor                # Launch motion editor GUI")
 
 
 def main():
@@ -286,7 +289,7 @@ def main():
                         print(f"[ERROR] Invalid duration: {sys.argv[3]}")
                         print_usage()
                         sys.exit(1)
-            elif mode not in ("sequence", "interactive"):
+            elif mode not in ("sequence", "interactive", "motion_editor"):
                 print(f"[ERROR] Unknown mode: {mode}")
                 print_usage()
                 sys.exit(1)
@@ -309,6 +312,9 @@ def main():
                 print(f"[INFO] Available: {', '.join(available_gestures)}")
                 sys.exit(1)
             demo.run_single_gesture(gesture_name, duration)
+        elif mode == "motion_editor":
+            print("[INFO] Launching motion editor GUI...")
+            launch_motion_editor(demo.hand)
         
     except KeyboardInterrupt:
         print("\n[INFO] User interrupted")

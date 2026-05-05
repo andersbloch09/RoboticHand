@@ -1,0 +1,34 @@
+{
+  "name": "nono4",
+  "duration": 1.0,
+  "easing": "ease_in_out_cubic",
+  "repeat": 1,
+  "loop": true,
+  "description": "",
+  "keyframes": [
+    [
+      0.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 1.0,
+        "finger_2": 1.0,
+        "finger_3": 1.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 0.0,
+        "index_abduction": 0.0
+      }
+    ],
+    [
+      1.0,
+      {
+        "finger_0": 0.0,
+        "finger_1": 1.0,
+        "finger_2": 1.0,
+        "finger_3": 1.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 0.0,
+        "index_abduction": 1.0
+      }
+    ]
+  ]
+}

@@ -1,37 +1,37 @@
 {
   "finger_0": {
-    "start": 3982,
-    "min": 5673,
-    "max": 3983
+    "start": 4095,
+    "min": 5793,
+    "max": 4095
   },
   "finger_1": {
-    "start": 2185,
-    "min": 3811,
-    "max": 2185
+    "start": 1412,
+    "min": 3044,
+    "max": 1412
   },
   "finger_2": {
-    "start": 982,
-    "min": 2791,
-    "max": 982
+    "start": 2849,
+    "min": 4646,
+    "max": 2849
   },
   "finger_3": {
-    "start": 114,
-    "min": 1707,
-    "max": 114
+    "start": 150,
+    "min": 2611,
+    "max": 150
   },
   "thumb_flexion": {
-    "start": 916,
-    "min": 2134,
-    "max": 916
+    "start": 926,
+    "min": 2173,
+    "max": 926
   },
   "thumb_abduction": {
-    "start": 1680,
-    "min": 1910,
-    "max": 1677
+    "start": 1359,
+    "min": 2149,
+    "max": 1357
   },
   "index_abduction": {
-    "start": 3572,
-    "min": 3926,
-    "max": 3572
+    "start": 3563,
+    "min": 4094,
+    "max": 3562
   }
 }
