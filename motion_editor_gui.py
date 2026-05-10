@@ -33,6 +33,7 @@ class KeyframeEditor(QWidget):
         self.digit_sliders = {}
         self.digit_position_labels = {}
         self.torque_limits = {}  # {digit_name: torque_nm}
+        self.torque_spinboxes = {}
         
         self.init_ui()
     
@@ -106,6 +107,7 @@ class KeyframeEditor(QWidget):
                 lambda val, dn=digit_name: self.on_torque_changed(dn, val)
             )
             self.torque_limits[digit_name] = 0.25
+            self.torque_spinboxes[digit_name] = torque_spinbox
             h_layout.addWidget(torque_spinbox)
             
             sliders_layout.addLayout(h_layout)
@@ -142,6 +144,15 @@ class KeyframeEditor(QWidget):
         """Update label when slider moves."""
         normalized = value / 100.0
         self.digit_position_labels[digit_name].setText(f"{normalized:.2f}")
+
+    def on_torque_changed(self, digit_name, value):
+        """Update stored torque limit for a digit."""
+        try:
+            # store as float (Nm)
+            self.torque_limits[digit_name] = float(value)
+        except Exception:
+            # ignore invalid inputs
+            pass
     
     def on_time_changed(self, value):
         """Update keyframe time."""
@@ -153,7 +164,8 @@ class KeyframeEditor(QWidget):
     def add_keyframe(self):
         """Add new keyframe."""
         last_time = self.keyframes[-1][0] if self.keyframes else 0.0
-        self.keyframes.append((last_time + 1.0, {}))
+        # default keyframe format: (time, positions_dict, torques_dict)
+        self.keyframes.append((last_time + 1.0, {}, {}))
         self.current_keyframe_index = len(self.keyframes) - 1
         self.refresh_keyframe_list()
     
@@ -171,7 +183,11 @@ class KeyframeEditor(QWidget):
             index = self.keyframe_list.row(items[0])
             self.current_keyframe_index = index
             
-            time_val, positions = self.keyframes[index]
+            time_val, positions = self.keyframes[index][0], self.keyframes[index][1]
+            # support both (time, positions) and (time, positions, torques)
+            torques = {}
+            if len(self.keyframes[index]) > 2:
+                torques = self.keyframes[index][2]
             self.time_spinbox.blockSignals(True)
             self.time_spinbox.setValue(time_val)
             self.time_spinbox.blockSignals(False)
@@ -183,52 +199,90 @@ class KeyframeEditor(QWidget):
                 slider.setValue(value)
                 slider.blockSignals(False)
                 self.digit_position_labels[digit_name].setText(f"{normalized:.2f}")
+                # update torque spinbox display for this keyframe
+                if digit_name in self.torque_spinboxes:
+                    torque_val = torques.get(digit_name, self.torque_limits.get(digit_name, 0.25))
+                    self.torque_spinboxes[digit_name].blockSignals(True)
+                    self.torque_spinboxes[digit_name].setValue(torque_val)
+                    self.torque_spinboxes[digit_name].blockSignals(False)
     
     def update_keyframe_position(self):
         """Save slider positions to keyframe."""
         if self.current_keyframe_index < len(self.keyframes):
-            time_val, _ = self.keyframes[self.current_keyframe_index]
+            time_val = self.keyframes[self.current_keyframe_index][0]
             positions = {}
+            torques = {}
             
             # Include ALL slider values, even if 0.0 (fully open)
             for digit_name, slider in self.digit_sliders.items():
                 normalized = slider.value() / 100.0
                 positions[digit_name] = normalized
+                # read current torque spinbox value for this digit
+                if digit_name in self.torque_spinboxes:
+                    try:
+                        torques[digit_name] = float(self.torque_spinboxes[digit_name].value())
+                    except Exception:
+                        torques[digit_name] = self.torque_limits.get(digit_name, 0.25)
             
-            self.keyframes[self.current_keyframe_index] = (time_val, positions)
+            self.keyframes[self.current_keyframe_index] = (time_val, positions, torques)
             self.refresh_keyframe_list()
     
     def preview_on_gripper(self):
         """Apply keyframe to gripper."""
         if self.current_keyframe_index < len(self.keyframes):
-            _, positions = self.keyframes[self.current_keyframe_index]
-            
-            # Set all motors to current-based position mode (safe, compliant preview)
-            self._setup_motors_for_preview()
-            
+            # support (time, positions) and (time, positions, torques)
+            entry = self.keyframes[self.current_keyframe_index]
+            if len(entry) > 2:
+                _, positions, torques = entry
+            else:
+                _, positions = entry
+                torques = {}
+
+            # Setup motors with these torques
+            self._setup_motors_for_preview(per_digit_torques=torques)
+
             for digit_name, norm_pos in positions.items():
                 self._apply_position(digit_name, norm_pos)
     
-    def _setup_motors_for_preview(self):
+    def _setup_motors_for_preview(self, per_digit_torques=None):
         """Set all motors to current-based position mode for safe preview."""
+        torque = 0.25  # default torque limit for preview (can be overridden by per_digit_torques)
         try:
             # Set all finger motors
             for i in range(4):
                 try:
                     motor = self.hand.fingers[f"finger_{i}"].motor
+    
+                    if per_digit_torques and f"finger_{i}" in per_digit_torques:
+                        torque = per_digit_torques.get(f"finger_{i}", torque)
+                    else:
+                        torque = self.torque_limits.get(f"finger_{i}", torque)
+                    motor.torque_disable()
                     motor.set_current_based_position_mode()
-                    motor.set_torque_limit(self.TORQUE_LIMIT)
+                    motor.set_torque_limit(torque)
                     motor.torque_enable()
                 except Exception as e:
                     print(f"[ERROR] finger_{i} setup failed: {e}")
             
             # Set thumb motors
             try:
+                if per_digit_torques and "thumb_flexion" in per_digit_torques:
+                    torque = per_digit_torques.get("thumb_flexion", torque)
+                else:
+                    torque = self.torque_limits.get("thumb_flexion", torque)
+                self.hand.thumb.flexion.motor.torque_disable()
                 self.hand.thumb.flexion.motor.set_current_based_position_mode()
-                self.hand.thumb.flexion.motor.set_torque_limit(self.TORQUE_LIMIT)
+                self.hand.thumb.flexion.motor.set_torque_limit(torque)
                 self.hand.thumb.flexion.motor.torque_enable()
+
+                if per_digit_torques and "thumb_abduction" in per_digit_torques:
+                    torque = per_digit_torques.get("thumb_abduction", torque)
+                else:
+                    torque = self.torque_limits.get("thumb_abduction", torque)
+
+                self.hand.thumb.abduction.motor.torque_disable()
                 self.hand.thumb.abduction.motor.set_current_based_position_mode()
-                self.hand.thumb.abduction.motor.set_torque_limit(self.TORQUE_LIMIT)
+                self.hand.thumb.abduction.motor.set_torque_limit(torque)
                 self.hand.thumb.abduction.motor.torque_enable()
             except Exception as e:
                 print(f"[ERROR] Thumb setup failed: {e}")
@@ -236,8 +290,13 @@ class KeyframeEditor(QWidget):
             # Set index abduction if present
             if self.hand.index_abduction:
                 try:
+                    if per_digit_torques and "index_abduction" in per_digit_torques:
+                        torque = per_digit_torques.get("index_abduction", torque)
+                    else:
+                        torque = self.torque_limits.get("index_abduction", torque)
+                    self.hand.index_abduction.motor.torque_disable()
                     self.hand.index_abduction.motor.set_current_based_position_mode()
-                    self.hand.index_abduction.motor.set_torque_limit(self.TORQUE_LIMIT)
+                    self.hand.index_abduction.motor.set_torque_limit(torque)
                     self.hand.index_abduction.motor.torque_enable()
                 except Exception as e:
                     print(f"[ERROR] Index abduction setup failed: {e}")
@@ -281,7 +340,17 @@ class KeyframeEditor(QWidget):
     def refresh_keyframe_list(self):
         """Refresh keyframe display."""
         self.keyframe_list.clear()
-        for i, (time_val, positions) in enumerate(self.keyframes):
+        for i, entry in enumerate(self.keyframes):
+            # entry may be (time, positions) or (time, positions, torques) or dict
+            if isinstance(entry, dict):
+                time_val = entry.get("time", 0.0)
+                positions = entry.get("positions", {})
+            elif isinstance(entry, (list, tuple)):
+                time_val = entry[0]
+                positions = entry[1] if len(entry) > 1 else {}
+            else:
+                time_val = 0.0
+                positions = {}
             item_text = f"Frame {i}: t={time_val:.1f}s, {len(positions)} pos"
             self.keyframe_list.addItem(item_text)
     
@@ -291,7 +360,26 @@ class KeyframeEditor(QWidget):
     
     def set_keyframes(self, keyframes):
         """Load keyframes."""
-        self.keyframes = keyframes
+        # Normalize loaded keyframes into internal tuple form: (time, positions, torques)
+        normalized = []
+        for k in keyframes:
+            if isinstance(k, dict):
+                t = k.get("time", 0.0)
+                pos = k.get("positions", {})
+                tor = k.get("torques", {})
+            elif isinstance(k, (list, tuple)):
+                if len(k) == 2:
+                    t, pos = k
+                    tor = {}
+                elif len(k) >= 3:
+                    t, pos, tor = k[0], k[1], k[2]
+                else:
+                    continue
+            else:
+                continue
+            normalized.append((t, pos or {}, tor or {}))
+
+        self.keyframes = normalized
         self.refresh_keyframe_list()
 
 
@@ -478,9 +566,14 @@ class MotionEditorWindow(QMainWindow):
             return
         
         keyframes = sorted(keyframes, key=lambda x: x[0])
-        
+
+        # Ensure first keyframe at t=0.0 (preserve positions/torques)
         if keyframes[0][0] != 0.0:
-            keyframes[0] = (0.0, keyframes[0][1])
+            entry = keyframes[0]
+            if len(entry) > 2:
+                keyframes[0] = (0.0, entry[1], entry[2])
+            else:
+                keyframes[0] = (0.0, entry[1], {})
         
         dialog = MotionSaver(self)
         if dialog.exec_() == QDialog.Accepted:
@@ -489,9 +582,13 @@ class MotionEditorWindow(QMainWindow):
                 QMessageBox.warning(self, "Error", "Motion name required")
                 return
             
+            # Ensure last keyframe time matches metadata duration (preserve positions/torques)
             if metadata.duration != keyframes[-1][0]:
-                _, last_pos = keyframes[-1]
-                keyframes[-1] = (metadata.duration, last_pos)
+                entry = keyframes[-1]
+                if len(entry) > 2:
+                    keyframes[-1] = (metadata.duration, entry[1], entry[2])
+                else:
+                    keyframes[-1] = (metadata.duration, entry[1], {})
             
             if self.library.save_motion(metadata.name, keyframes, metadata):
                 QMessageBox.information(self, "Success", f"Saved: {metadata.name}")
@@ -509,13 +606,20 @@ class MotionEditorWindow(QMainWindow):
         
         keyframes = sorted(keyframes, key=lambda x: x[0])
         duration = keyframes[-1][0]
-        
-        # Validate keyframes: first must be at t=0.0, last at duration
+
+        # Validate keyframes: first must be at t=0.0, last at duration (preserve torques)
         if keyframes[0][0] != 0.0:
-            keyframes[0] = (0.0, keyframes[0][1])
+            entry = keyframes[0]
+            if len(entry) > 2:
+                keyframes[0] = (0.0, entry[1], entry[2])
+            else:
+                keyframes[0] = (0.0, entry[1], {})
         if keyframes[-1][0] != duration:
-            _, last_pos = keyframes[-1]
-            keyframes[-1] = (duration, last_pos)
+            entry = keyframes[-1]
+            if len(entry) > 2:
+                keyframes[-1] = (duration, entry[1], entry[2])
+            else:
+                keyframes[-1] = (duration, entry[1], {})
         
         motion = Motion(
             name="preview",

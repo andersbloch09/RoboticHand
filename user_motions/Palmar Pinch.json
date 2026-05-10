@@ -1,0 +1,52 @@
+{
+  "name": "Palmar Pinch",
+  "duration": 1.0,
+  "easing": "ease_in_out_cubic",
+  "repeat": 1,
+  "loop": false,
+  "description": "",
+  "keyframes": [
+    {
+      "time": 0.0,
+      "positions": {
+        "finger_0": 0.53,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.24,
+        "thumb_abduction": 0.71,
+        "index_abduction": 1.0
+      },
+      "torques": {
+        "finger_0": 0.3,
+        "finger_1": 0.25,
+        "finger_2": 0.25,
+        "finger_3": 0.25,
+        "thumb_flexion": 0.3,
+        "thumb_abduction": 0.4,
+        "index_abduction": 0.25
+      }
+    },
+    {
+      "time": 1.0,
+      "positions": {
+        "finger_0": 0.25,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.1,
+        "thumb_abduction": 0.7,
+        "index_abduction": 1.0
+      },
+      "torques": {
+        "finger_0": 0.25,
+        "finger_1": 0.25,
+        "finger_2": 0.25,
+        "finger_3": 0.25,
+        "thumb_flexion": 0.25,
+        "thumb_abduction": 0.25,
+        "index_abduction": 0.25
+      }
+    }
+  ]
+}

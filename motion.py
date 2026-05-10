@@ -138,33 +138,55 @@ class Motion:
             loop: If True, repeat infinitely
         """
         self.name = name
-        self.keyframes = sorted(keyframes, key=lambda x: x[0])  # Sort by time
+        # Normalize keyframes to (time, positions_dict, torques_dict)
+        normalized = []
+        for k in keyframes:
+            # support dict-style or tuple/list
+            if isinstance(k, dict):
+                t = k.get("time")
+                pos = k.get("positions", {})
+                tor = k.get("torques", {})
+            elif isinstance(k, (list, tuple)):
+                if len(k) == 2:
+                    t, pos = k
+                    tor = {}
+                elif len(k) >= 3:
+                    t, pos, tor = k[0], k[1], k[2]
+                else:
+                    raise ValueError("Invalid keyframe format")
+            else:
+                raise ValueError("Invalid keyframe format")
+            normalized.append((t, pos or {}, tor or {}))
+
+        self.keyframes = sorted(normalized, key=lambda x: x[0])  # Sort by time
         self.duration = duration
         self.easing_fn = EasingFunction.get_function(easing)
         self.repeat = repeat if not loop else float('inf')
         self.loop = loop
         
-        # Validate keyframes
-        if not keyframes:
+        # Validate normalized keyframes
+        if not self.keyframes:
             raise ValueError("Motion must have at least one keyframe")
-        if keyframes[0][0] != 0.0:
+        if self.keyframes[0][0] != 0.0:
             raise ValueError("First keyframe must be at time 0.0")
-        if keyframes[-1][0] != duration:
+        if self.keyframes[-1][0] != duration:
             raise ValueError("Last keyframe must be at motion duration")
-        
+
         print(f"[DEBUG] Motion '{name}' created with {len(self.keyframes)} keyframes:")
-        for t, pos in self.keyframes:
-            print(f"  t={t:.2f}s: {list(pos.keys())}")
+        for t, pos, tor in self.keyframes:
+            print(f"  t={t:.2f}s: {list(pos.keys())} torques={list(tor.keys())}")
         
         # State
         self.state = self.State.IDLE
         self.elapsed_time = 0.0
         self.current_repeat = 0
         self._last_targets = {}
+        # Track last elapsed time to detect keyframe events (torque changes)
+        self._last_elapsed_time = 0.0
     
-    def update(self, dt: float) -> Dict[str, float]:
+    def update(self, dt: float) -> (Dict[str, float], Dict[str, float]):
         """
-        Update motion and return current digit targets.
+        Update motion and return current digit targets and torque change events.
         
         Args:
             dt: Time step (seconds)
@@ -173,12 +195,13 @@ class Motion:
             {digit_name: normalized_position} for all active digits
         """
         if self.state == self.State.IDLE:
-            return {}
+            return {}, {}
         
         if self.state == self.State.PAUSED:
-            return self._last_targets
+            return self._last_targets, {}
         
         # Advance time
+        prev_time = self._last_elapsed_time
         self.elapsed_time += dt
         
         # Check if motion finished
@@ -188,16 +211,47 @@ class Motion:
             if self.current_repeat >= self.repeat:
                 self.state = self.State.FINISHED
                 print(f"[DEBUG] {self.name}: FINISHED after {self.current_repeat} repeats")
-                return self._last_targets
+                # collect torque events for any keyframes crossed up to duration, then stop
+                torque_events = self._collect_torque_events(prev_time, self.duration)
+                self._last_elapsed_time = self.duration
+                return self._last_targets, torque_events
             else:
                 # Loop: reset time
-                self.elapsed_time = 0.0
-                print(f"[DEBUG] {self.name}: looping, reset time to 0.0")
+                # gather torque events for segment prev_time -> duration
+                torque_events = self._collect_torque_events(prev_time, self.duration)
+                # then for the wrapped segment 0.0 -> remaining time
+                wrapped = self.elapsed_time - self.duration
+                if wrapped > 0:
+                    torque_events.update(self._collect_torque_events(0.0, wrapped))
+                self.elapsed_time = wrapped
+                print(f"[DEBUG] {self.name}: looping, reset time to {self.elapsed_time:.3f}")
+                self._last_elapsed_time = self.elapsed_time
+                # Return current interpolated targets and torque events
+                targets = self._interpolate_at_time(self.elapsed_time)
+                self._last_targets = targets
+                return targets, torque_events
         
+        # Collect torque events for keyframes crossed in this update
+        torque_events = self._collect_torque_events(prev_time, self.elapsed_time)
+
         # Interpolate positions at current time
         targets = self._interpolate_at_time(self.elapsed_time)
         self._last_targets = targets
-        return targets
+        self._last_elapsed_time = self.elapsed_time
+        return targets, torque_events
+
+    def _collect_torque_events(self, start_time: float, end_time: float) -> Dict[str, float]:
+        """Collect torque settings for keyframes whose time is within (start_time, end_time].
+
+        Returns a mapping digit_name -> torque_value for all torques specified at those keyframes.
+        If multiple keyframes set the same digit, later keyframe in time wins.
+        """
+        events = {}
+        for t, pos, tor in self.keyframes:
+            if start_time < t <= end_time:
+                if tor:
+                    events.update(tor)
+        return events
     
     def _interpolate_at_time(self, time: float) -> Dict[str, float]:
         """
@@ -213,8 +267,8 @@ class Motion:
         
         # Find neighboring keyframes
         for i in range(len(self.keyframes) - 1):
-            t1, frame1 = self.keyframes[i]
-            t2, frame2 = self.keyframes[i + 1]
+            t1, frame1, _ = self.keyframes[i]
+            t2, frame2, _ = self.keyframes[i + 1]
             
             if t1 <= time <= t2:
                 # Interpolate between frame1 and frame2
@@ -327,27 +381,30 @@ class MotionSequence:
             Merged {digit_name: position} from all active motions
         """
         if not self.is_playing:
-            return {}
+            return {}, {}
         
         merged_targets = {}
-        
+
         if self.parallel:
             # All motions play at once
+            merged_torque_events = {}
             for motion in self.motions:
                 if not motion.is_finished():
-                    targets = motion.update(dt)
+                    targets, torques = motion.update(dt)
                     merged_targets.update(targets)
-            
+                    merged_torque_events.update(torques)
+
             # Check if all finished
             if all(m.is_finished() for m in self.motions):
                 self.is_playing = False
+            return merged_targets, merged_torque_events
         else:
             # Sequential: play one motion at a time
             if self.current_index < len(self.motions):
                 current_motion = self.motions[self.current_index]
-                targets = current_motion.update(dt)
+                targets, torques = current_motion.update(dt)
                 merged_targets.update(targets)
-                
+
                 # If current motion finished, advance to next
                 if current_motion.is_finished():
                     self.current_index += 1
@@ -355,8 +412,8 @@ class MotionSequence:
                         self.motions[self.current_index].play()
                     else:
                         self.is_playing = False
-        
-        return merged_targets
+
+            return merged_targets, torques
     
     def is_finished(self) -> bool:
         """Check if all motions finished."""
@@ -428,30 +485,73 @@ class MotionPlayer:
             self._speed_logged = True
         
         merged_targets = {}
-        
+        merged_torque_events = {}
+
         # Update sequence if active
         if self.current_sequence:
-            targets = self.current_sequence.update(scaled_dt)
+            targets, torques = self.current_sequence.update(scaled_dt)
             merged_targets.update(targets)
-            
+            merged_torque_events.update(torques)
+
             if self.current_sequence.is_finished():
                 self.current_sequence = None
         
         # Update independent motions
         finished = []
         for motion in self.active_motions:
-            targets = motion.update(scaled_dt)
+            targets, torques = motion.update(scaled_dt)
             if targets:
                 merged_targets.update(targets)
-            
+            if torques:
+                merged_torque_events.update(torques)
+
             if motion.is_finished():
                 finished.append(motion)
-        
+
         for motion in finished:
             self.active_motions.remove(motion)
-        
-        # Apply merged targets to hand digits
+
+        # First apply torque events (disable -> set limit -> enable)
+        for digit, torque_value in merged_torque_events.items():
+            try:
+                self._apply_torque_change(digit, torque_value)
+            except Exception as e:
+                print(f"[ERROR] Failed to apply torque change for {digit}: {e}")
+
+        # Then apply merged position targets to hand digits
         self._apply_targets(merged_targets)
+
+    def _apply_torque_change(self, digit_name: str, torque_value: float):
+        """Apply torque change to a given digit: disable torque, set limit, enable torque."""
+        if digit_name not in self.calibration:
+            # still attempt to map known digit names
+            pass
+
+        motor = None
+        try:
+            if digit_name.startswith("finger_"):
+                idx = int(digit_name.split("_")[1])
+                motor = self.hand.fingers.get(f"finger_{idx}").motor if self.hand.fingers.get(f"finger_{idx}") else None
+            elif digit_name == "thumb_flexion":
+                motor = self.hand.thumb.flexion.motor
+            elif digit_name == "thumb_abduction":
+                motor = self.hand.thumb.abduction.motor
+            elif digit_name == "index_abduction" and self.hand.index_abduction:
+                motor = self.hand.index_abduction.motor
+
+            if not motor:
+                return
+
+            # Perform disable -> set limit -> enable sequence
+            try:
+                motor.torque_disable()
+            except Exception:
+                # continue even if disable not supported
+                pass
+            motor.set_torque_limit(float(torque_value))
+            motor.torque_enable()
+        except Exception as e:
+            print(f"[ERROR] _apply_torque_change failed for {digit_name}: {e}")
     
     def _apply_targets(self, targets: Dict[str, float]):
         """

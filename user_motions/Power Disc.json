@@ -1,0 +1,52 @@
+{
+  "name": "Power DIsc",
+  "duration": 1.0,
+  "easing": "ease_in_out_cubic",
+  "repeat": 1,
+  "loop": false,
+  "description": "",
+  "keyframes": [
+    {
+      "time": 0.0,
+      "positions": {
+        "finger_0": 0.45,
+        "finger_1": 0.4,
+        "finger_2": 0.4,
+        "finger_3": 0.59,
+        "thumb_flexion": 0.26,
+        "thumb_abduction": 0.7,
+        "index_abduction": 0.44
+      },
+      "torques": {
+        "finger_0": 0.25,
+        "finger_1": 0.25,
+        "finger_2": 0.25,
+        "finger_3": 0.25,
+        "thumb_flexion": 0.25,
+        "thumb_abduction": 0.4,
+        "index_abduction": 0.25
+      }
+    },
+    {
+      "time": 1.0,
+      "positions": {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 0.8,
+        "index_abduction": 0.0
+      },
+      "torques": {
+        "finger_0": 0.25,
+        "finger_1": 0.25,
+        "finger_2": 0.25,
+        "finger_3": 0.25,
+        "thumb_flexion": 0.25,
+        "thumb_abduction": 0.25,
+        "index_abduction": 0.25
+      }
+    }
+  ]
+}

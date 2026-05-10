@@ -30,6 +30,23 @@ class MotionLibrary:
                    metadata: MotionMetadata) -> bool:
         """Save motion to JSON file."""
         try:
+            # Normalize keyframes into stable dict format
+            kf_list = []
+            for k in keyframes:
+                if isinstance(k, dict):
+                    t = k.get("time")
+                    pos = k.get("positions", {})
+                    tor = k.get("torques", {})
+                elif isinstance(k, (list, tuple)):
+                    if len(k) == 2:
+                        t, pos = k
+                        tor = {}
+                    else:
+                        t, pos, tor = k[0], k[1], (k[2] if len(k) > 2 else {})
+                else:
+                    continue
+                kf_list.append({"time": t, "positions": pos, "torques": tor})
+
             motion_data = {
                 "name": metadata.name,
                 "duration": metadata.duration,
@@ -37,7 +54,7 @@ class MotionLibrary:
                 "repeat": metadata.repeat,
                 "loop": metadata.loop,
                 "description": metadata.description,
-                "keyframes": keyframes,
+                "keyframes": kf_list,
             }
             
             filepath = os.path.join(self.directory, f"{name}.json")

@@ -1,0 +1,52 @@
+{
+  "name": "Parallel Extension",
+  "duration": 1.0,
+  "easing": "ease_in_out_cubic",
+  "repeat": 1,
+  "loop": false,
+  "description": "",
+  "keyframes": [
+    {
+      "time": 0.0,
+      "positions": {
+        "finger_0": 0.5,
+        "finger_1": 0.5,
+        "finger_2": 0.5,
+        "finger_3": 0.5,
+        "thumb_flexion": 0.55,
+        "thumb_abduction": 1.0,
+        "index_abduction": 1.0
+      },
+      "torques": {
+        "finger_0": 0.3,
+        "finger_1": 0.3,
+        "finger_2": 0.3,
+        "finger_3": 0.3,
+        "thumb_flexion": 0.3,
+        "thumb_abduction": 0.4,
+        "index_abduction": 0.25
+      }
+    },
+    {
+      "time": 1.0,
+      "positions": {
+        "finger_0": 0.0,
+        "finger_1": 0.0,
+        "finger_2": 0.0,
+        "finger_3": 0.0,
+        "thumb_flexion": 0.0,
+        "thumb_abduction": 1.0,
+        "index_abduction": 1.0
+      },
+      "torques": {
+        "finger_0": 0.25,
+        "finger_1": 0.25,
+        "finger_2": 0.25,
+        "finger_3": 0.25,
+        "thumb_flexion": 0.25,
+        "thumb_abduction": 0.25,
+        "index_abduction": 0.25
+      }
+    }
+  ]
+}
