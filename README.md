@@ -1,9 +1,8 @@
 # RoboticHand
  This open-source robotic hand was designed and developed as part of a masters thesis in manufacturing technology at Aalborg University, 2026.
 
-<p align="center">
-  <img src="images/RoboticHand.png" width="425" height="859" />
-</p>
+<img src="images/RoboticHand.PNG" width="425" height="859" />
+
 ## Grasping Images
 <img src="images/Grasps.png" width="896" height="370" align=center/>
 
