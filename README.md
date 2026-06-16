@@ -4,7 +4,7 @@
 <img src="images/RoboticHand.PNG" width="425" height="859" />
 
 ## Grasping Images
-<img src="images/Grasps.png" width="896" height="370" align=center/>
+<img src="images/Grasps.PNG" width="896" height="370" align=center/>
 
 ## Setup
     In order to set up the hand for use, you first must identify the Dynamixel Motor IDs that correspond to each degree of actuation. These must be entered into motor_config.py, into the "DEFAULT_CONFIG" field.
