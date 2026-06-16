@@ -1,4 +1,0 @@
-# Python 3.10.12
-dynamixel-sdk
-numpy
-pyqt5
