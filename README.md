@@ -1,8 +1,9 @@
 # RoboticHand
  This open-source robotic hand was designed and developed as part of a masters thesis in manufacturing technology at Aalborg University, 2026.
 
-<img src="images/RoboticHand.png" width="425" height="859" align=center/> 
-
+<p align="center">
+  <img src="images/RoboticHand.png" width="425" height="859" />
+</p>
 ## Grasping Images
 <img src="images/Grasps.png" width="896" height="370" align=center/>
 
@@ -15,18 +16,18 @@
 
     All digits should be set to their most "open" configuration before initializing main.py. If a calibration.json file already exists in the repository, then the calibration routine will not be executed. To recalibrate, remove the calibration.json file and run:
 
-    ``` python
-    python main.py
-    ```
+   ```bash
+   python main.py
+   ```
     
     When the calibration is finished, the motion editor UI window will open.
 
 ## How to use
     If the setup steps above have already been performed, simply run the following command to open the motion editor UI:
 
-    ``` python
-    python main.py
-    ```
+   ```bash
+   python main.py
+   ```
 
 
 ## Dependencies
